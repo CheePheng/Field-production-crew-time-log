@@ -7,24 +7,10 @@ import { Input } from '@/components/ui/Input'
 import { useToast } from '@/components/ui/Toast'
 import { db } from '@/db/schema'
 import { exportReportsToCSV, downloadCSV } from '@/utils/exportCsv'
+import { getTodayDate, getDateDaysAgo, getMonthStart } from '@/utils/dateHelpers'
 import type { DailyReport, CrewMember, Site } from '@/db/schema'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function getDateDaysAgo(days: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d.toISOString().slice(0, 10)
-}
-
-function getMonthStart(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-}
 
 function totalEntries(reports: DailyReport[]): number {
   return reports.reduce((s, r) => s + r.entries.length, 0)

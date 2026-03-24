@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useCrewDefaults } from '@/hooks/useCrewDefaults'
 import { db } from '@/db/schema'
+import { getTodayDate } from '@/utils/dateHelpers'
 import type { Site } from '@/db/schema'
 
 interface Step1Data {
@@ -15,10 +16,6 @@ interface WizardStep1Props {
   data: Step1Data
   onChange: (data: Step1Data) => void
   onNext: () => void
-}
-
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
 }
 
 export function WizardStep1({ data, onChange, onNext }: WizardStep1Props) {

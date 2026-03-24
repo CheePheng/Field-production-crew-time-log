@@ -4,39 +4,15 @@ import { liveQuery } from 'dexie'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { db } from '@/db/schema'
+import { getTodayDate, getDateDaysAgo } from '@/utils/dateHelpers'
 import type { DailyReport, Site } from '@/db/schema'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function getDateDaysAgo(days: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() - days)
-  return d.toISOString().slice(0, 10)
-}
-
 function totalHours(r: DailyReport): number {
   return r.entries.reduce((s, e) => s + e.hours_regular + e.hours_overtime, 0)
-}
-
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: DailyReport['status'] }) {
-  const cfg = {
-    draft:     'bg-amber-100 text-amber-800 border border-amber-200',
-    submitted: 'bg-green-100 text-green-800 border border-green-200',
-    synced:    'bg-blue-100 text-blue-800 border border-blue-200',
-  }[status]
-  const label = status.charAt(0).toUpperCase() + status.slice(1)
-  return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg}`}>
-      {label}
-    </span>
-  )
 }
 
 // ─── Filter chips ─────────────────────────────────────────────────────────────

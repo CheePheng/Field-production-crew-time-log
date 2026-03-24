@@ -6,6 +6,7 @@ import { useCrewDefaults } from '@/hooks/useCrewDefaults'
 import { useToast } from '@/components/ui/Toast'
 import { getCurrentUser } from '@/utils/auth'
 import { db } from '@/db/schema'
+import { getTodayDate } from '@/utils/dateHelpers'
 import { WizardStep1 } from '@/components/report/WizardStep1'
 import { WizardStep2 } from '@/components/report/WizardStep2'
 import { WizardStep3 } from '@/components/report/WizardStep3'
@@ -19,10 +20,6 @@ interface ReportFormData {
   entries: DailyReportEntry[]
   photos: ReportPhoto[]
   notes: string
-}
-
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
 }
 
 // ─── Progress indicator ───────────────────────────────────────────────────────

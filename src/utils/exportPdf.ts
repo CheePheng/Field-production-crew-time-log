@@ -1,5 +1,29 @@
 import type { DailyReport, Site, CrewMember } from '@/db/schema'
 
+// ─── pdfmake singleton ────────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let pdfMakeInstance: any = null
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function getPdfMake(): Promise<any> {
+  if (pdfMakeInstance) return pdfMakeInstance
+  const mod = await import('pdfmake/build/pdfmake')
+  const vfsMod = await import('pdfmake/build/vfs_fonts')
+  const pm = mod.default
+  if (vfsMod.default?.vfs) pm.vfs = vfsMod.default.vfs
+  pm.fonts = {
+    Roboto: {
+      normal: 'Roboto-Regular.ttf',
+      bold: 'Roboto-Medium.ttf',
+      italics: 'Roboto-Italic.ttf',
+      bolditalics: 'Roboto-MediumItalic.ttf',
+    },
+  }
+  pdfMakeInstance = pm
+  return pm
+}
+
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 function formatDate(isoDate: string): string {
@@ -26,25 +50,8 @@ export async function exportReportToPDF(
   site: Site,
   crewMembers: CrewMember[],
 ): Promise<void> {
-  // Lazy-load pdfmake — it's ~800KB with fonts
-  const pdfMakeModule = await import('pdfmake/build/pdfmake')
-  const pdfMake = pdfMakeModule.default
-
-  // Load vfs_fonts for Roboto
-  const vfsFontsModule = await import('pdfmake/build/vfs_fonts')
-  const vfsFonts = vfsFontsModule.default
-  if (vfsFonts?.vfs) {
-    pdfMake.vfs = vfsFonts.vfs
-  }
-
-  pdfMake.fonts = {
-    Roboto: {
-      normal: 'Roboto-Regular.ttf',
-      bold: 'Roboto-Medium.ttf',
-      italics: 'Roboto-Italic.ttf',
-      bolditalics: 'Roboto-MediumItalic.ttf',
-    },
-  }
+  // Get (or lazily initialise) the shared pdfmake instance
+  const pdfMake = await getPdfMake()
 
   const crewMap = new Map<string, CrewMember>(crewMembers.map(c => [c.id, c]))
 

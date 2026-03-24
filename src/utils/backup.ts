@@ -44,17 +44,30 @@ export async function exportDatabaseBackup(): Promise<string> {
 
 // ─── Import ───────────────────────────────────────────────────────────────────
 
+function isArrayOfValidItems(arr: unknown[]): boolean {
+  return arr.every(item =>
+    typeof item === 'object' && item !== null && typeof (item as Record<string, unknown>).id === 'string'
+  )
+}
+
 function isBackupData(obj: unknown): obj is BackupData {
   if (typeof obj !== 'object' || obj === null) return false
   const b = obj as Record<string, unknown>
+  if (
+    typeof b.version !== 'number' ||
+    typeof b.exported_at !== 'string' ||
+    !Array.isArray(b.users) ||
+    !Array.isArray(b.sites) ||
+    !Array.isArray(b.crew_members) ||
+    !Array.isArray(b.activity_types) ||
+    !Array.isArray(b.daily_reports)
+  ) return false
   return (
-    typeof b.version === 'number' &&
-    typeof b.exported_at === 'string' &&
-    Array.isArray(b.users) &&
-    Array.isArray(b.sites) &&
-    Array.isArray(b.crew_members) &&
-    Array.isArray(b.activity_types) &&
-    Array.isArray(b.daily_reports)
+    isArrayOfValidItems(b.users) &&
+    isArrayOfValidItems(b.sites) &&
+    isArrayOfValidItems(b.crew_members) &&
+    isArrayOfValidItems(b.activity_types) &&
+    isArrayOfValidItems(b.daily_reports)
   )
 }
 

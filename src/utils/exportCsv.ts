@@ -7,8 +7,14 @@ import type { DailyReport, CrewMember } from '@/db/schema'
  * Wraps in double-quotes if the value contains a comma, double-quote, or newline.
  * Double-quotes within the value are escaped by doubling them.
  */
+const FORMULA_TRIGGERS = /^[=+\-@]/
+
 function escapeCSV(value: string | number | null | undefined): string {
-  const str = value == null ? '' : String(value)
+  let str = value == null ? '' : String(value)
+  // Defuse formula injection: prefix with tab so Excel/Sheets won't execute it
+  if (FORMULA_TRIGGERS.test(str)) {
+    str = '\t' + str
+  }
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
     return '"' + str.replace(/"/g, '""') + '"'
   }

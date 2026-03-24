@@ -4,25 +4,13 @@ import { liveQuery } from 'dexie'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { db } from '@/db/schema'
 import { getCurrentUser } from '@/utils/auth'
+import { getTodayDate, formatDateDisplay } from '@/utils/dateHelpers'
 import type { DailyReport, Site } from '@/db/schema'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function formatDisplayDate(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00')
-  return d.toLocaleDateString('en-MY', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
 
 function getWeekStartDate(): string {
   const d = new Date()
@@ -40,22 +28,6 @@ function sumHours(reports: DailyReport[]): number {
 
 function totalReportHours(r: DailyReport): number {
   return r.entries.reduce((s, e) => s + e.hours_regular + e.hours_overtime, 0)
-}
-
-// ─── Status badge ─────────────────────────────────────────────────────────────
-
-function StatusBadge({ status }: { status: DailyReport['status'] }) {
-  const cfg = {
-    draft:     'bg-amber-100 text-amber-800 border border-amber-200',
-    submitted: 'bg-green-100 text-green-800 border border-green-200',
-    synced:    'bg-blue-100 text-blue-800 border border-blue-200',
-  }[status]
-  const label = status.charAt(0).toUpperCase() + status.slice(1)
-  return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${cfg}`}>
-      {label}
-    </span>
-  )
 }
 
 // ─── Today Card ───────────────────────────────────────────────────────────────
@@ -283,20 +255,20 @@ export function Today() {
       const [todayRows, weekRows, recentRows, allSites, activeCrew] = await Promise.all([
         db.daily_reports.where('date').equals(today).toArray(),
         db.daily_reports.where('date').between(weekStart, today, true, true).toArray(),
+        // Only fetch recent reports, not all historical data
         db.daily_reports
-          .where('status').anyOf(['submitted', 'synced'])
+          .orderBy('date')
+          .reverse()
+          .filter(r => r.status === 'submitted' || r.status === 'synced')
+          .limit(3)
           .toArray(),
         db.sites.toArray(),
         db.crew_members.where('is_active').equals(1).count(),
       ])
 
-      const sorted = recentRows
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 3)
-
       const siteMap = new Map<string, Site>(allSites.map(s => [s.id, s]))
 
-      return { todayRows, weekRows, recent: sorted, siteMap, activeCrew }
+      return { todayRows, weekRows, recent: recentRows, siteMap, activeCrew }
     }).subscribe({
       next: ({ todayRows, weekRows, recent, siteMap, activeCrew }) => {
         setTodayReports(todayRows)
@@ -323,7 +295,7 @@ export function Today() {
     <>
       <PageHeader
         title="Today"
-        subtitle={formatDisplayDate(today)}
+        subtitle={formatDateDisplay(today)}
       />
 
       <main className="p-5 pb-24 max-w-lg mx-auto">
