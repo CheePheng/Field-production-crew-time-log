@@ -9,7 +9,6 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
 import { db } from '@/db/schema'
-import { getCurrentUser } from '@/utils/auth'
 import type { ActivityType } from '@/db/schema'
 
 // ─── Form state ───────────────────────────────────────────────────────────────
@@ -33,13 +32,6 @@ const emptyForm: FormState = {
 export function ActivityTypes() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-
-  const currentUser = getCurrentUser()
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/')
-    }
-  }, [currentUser, navigate])
 
   const [activities, setActivities] = useState<ActivityType[]>([])
   const [sheetOpen, setSheetOpen] = useState(false)

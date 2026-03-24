@@ -9,7 +9,6 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
 import { db } from '@/db/schema'
-import { getCurrentUser } from '@/utils/auth'
 import type { Site } from '@/db/schema'
 
 // ─── Form state ───────────────────────────────────────────────────────────────
@@ -35,13 +34,6 @@ const emptyForm: FormState = {
 export function Sites() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-
-  const currentUser = getCurrentUser()
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/')
-    }
-  }, [currentUser, navigate])
 
   const [sites, setSites] = useState<Site[]>([])
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -84,8 +76,22 @@ export function Sites() {
     const e: Partial<Record<keyof FormState, string>> = {}
     if (!form.name.trim()) e.name = 'Site name is required'
     if (!form.location_label.trim()) e.location_label = 'Location label is required'
-    if (form.gps_lat && isNaN(parseFloat(form.gps_lat))) e.gps_lat = 'Invalid latitude'
-    if (form.gps_lng && isNaN(parseFloat(form.gps_lng))) e.gps_lng = 'Invalid longitude'
+    if (form.gps_lat) {
+      const lat = parseFloat(form.gps_lat)
+      if (isNaN(lat)) {
+        e.gps_lat = 'Invalid latitude'
+      } else if (lat < -90 || lat > 90) {
+        e.gps_lat = 'Latitude must be between -90 and 90'
+      }
+    }
+    if (form.gps_lng) {
+      const lng = parseFloat(form.gps_lng)
+      if (isNaN(lng)) {
+        e.gps_lng = 'Invalid longitude'
+      } else if (lng < -180 || lng > 180) {
+        e.gps_lng = 'Longitude must be between -180 and 180'
+      }
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }

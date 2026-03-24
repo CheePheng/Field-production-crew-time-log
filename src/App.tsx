@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ToastProvider } from '@/components/ui/Toast'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { TabBar } from '@/components/layout/TabBar'
@@ -12,6 +12,15 @@ import { Login } from '@/pages/Login'
 import { CrewRoster } from '@/pages/admin/CrewRoster'
 import { Sites } from '@/pages/admin/Sites'
 import { ActivityTypes } from '@/pages/admin/ActivityTypes'
+import { getCurrentUser } from '@/utils/auth'
+
+// ─── Admin route guard ────────────────────────────────────────────────────────
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const user = getCurrentUser()
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />
+  return <>{children}</>
+}
 
 // ─── Inner layout (needs router context) ─────────────────────────────────────
 
@@ -39,9 +48,9 @@ function AppLayout() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/export" element={<Export />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/admin/crew" element={<CrewRoster />} />
-        <Route path="/admin/sites" element={<Sites />} />
-        <Route path="/admin/activities" element={<ActivityTypes />} />
+        <Route path="/admin/crew" element={<RequireAdmin><CrewRoster /></RequireAdmin>} />
+        <Route path="/admin/sites" element={<RequireAdmin><Sites /></RequireAdmin>} />
+        <Route path="/admin/activities" element={<RequireAdmin><ActivityTypes /></RequireAdmin>} />
         <Route path="/login" element={<Login />} />
       </Routes>
 

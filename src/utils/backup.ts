@@ -6,7 +6,8 @@ import type { User, Site, CrewMember, ActivityType, DailyReport } from '@/db/sch
 interface BackupData {
   version: number
   exported_at: string
-  users: User[]
+  // pin_hash and pin_salt are intentionally excluded — users must reset PINs after import
+  users: Omit<User, 'pin_hash' | 'pin_salt'>[]
   sites: Site[]
   crew_members: CrewMember[]
   activity_types: ActivityType[]
@@ -21,13 +22,16 @@ const BACKUP_VERSION = 1
  * Serialise all database tables (except photo_blobs) to a JSON string.
  */
 export async function exportDatabaseBackup(): Promise<string> {
-  const [users, sites, crew_members, activity_types, daily_reports] = await Promise.all([
+  const [rawUsers, sites, crew_members, activity_types, daily_reports] = await Promise.all([
     db.users.toArray(),
     db.sites.toArray(),
     db.crew_members.toArray(),
     db.activity_types.toArray(),
     db.daily_reports.toArray(),
   ])
+
+  // Strip PIN credentials from the export — users must reset PINs after import
+  const users = rawUsers.map(({ pin_hash: _h, pin_salt: _s, ...rest }) => rest)
 
   const backup: BackupData = {
     version: BACKUP_VERSION,
@@ -107,7 +111,8 @@ export async function importDatabaseBackup(jsonString: string): Promise<void> {
     ])
 
     await Promise.all([
-      db.users.bulkAdd(parsed.users),
+      // pin_hash/pin_salt are absent in backups — users must reset PINs after import
+      db.users.bulkAdd(parsed.users as unknown as User[]),
       db.sites.bulkAdd(parsed.sites),
       db.crew_members.bulkAdd(parsed.crew_members),
       db.activity_types.bulkAdd(parsed.activity_types),

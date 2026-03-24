@@ -9,7 +9,6 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
 import { db } from '@/db/schema'
-import { getCurrentUser } from '@/utils/auth'
 import type { CrewMember, ActivityType } from '@/db/schema'
 
 // ─── Form state ───────────────────────────────────────────────────────────────
@@ -46,14 +45,6 @@ const ROLE_SUGGESTIONS = [
 export function CrewRoster() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-
-  // Role guard
-  const currentUser = getCurrentUser()
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      navigate('/')
-    }
-  }, [currentUser, navigate])
 
   const [crew, setCrew] = useState<CrewMember[]>([])
   const [activities, setActivities] = useState<ActivityType[]>([])
@@ -129,6 +120,16 @@ export function CrewRoster() {
     if (!validate()) return
     setSaving(true)
     try {
+      // Enforce IC number uniqueness
+      const existing = await db.crew_members
+        .filter(m => m.ic_number === form.ic_number.trim() && m.id !== (editing?.id ?? ''))
+        .first()
+      if (existing) {
+        setErrors(e => ({ ...e, ic_number: 'IC number already in use' }))
+        setSaving(false)
+        return
+      }
+
       const now = new Date().toISOString()
       if (editing) {
         await db.crew_members.update(editing.id, {

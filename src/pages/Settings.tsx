@@ -8,7 +8,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet'
 import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
 import { db } from '@/db/schema'
-import { getCurrentUser, logout, hashPin, verifyPin, generateSalt } from '@/utils/auth'
+import { getCurrentUser, setCurrentUser, logout, hashPin, verifyPin, generateSalt } from '@/utils/auth'
 import { exportDatabaseBackup, importDatabaseBackup, downloadBackup } from '@/utils/backup'
 import { getTodayDate } from '@/utils/dateHelpers'
 
@@ -167,6 +167,9 @@ export function Settings() {
         pin_salt: salt,
         updated_at: new Date().toISOString(),
       })
+      // Re-fetch and refresh the session so it reflects any updated fields
+      const updatedUser = await db.users.get(currentUser.id)
+      if (updatedUser) setCurrentUser(updatedUser)
       showToast('PIN changed successfully', 'success')
       setPinSheetOpen(false)
     } catch (err) {
@@ -201,7 +204,10 @@ export function Settings() {
     try {
       const text = await file.text()
       await importDatabaseBackup(text)
-      showToast('Backup imported successfully', 'success')
+      // Force logout after import — user accounts have been replaced and PINs are unset
+      logout()
+      showToast('Backup imported. Please log in again — PINs have been reset.', 'info')
+      navigate('/login')
     } catch (err) {
       showToast('Import failed: ' + String(err), 'error')
     } finally {
@@ -453,7 +459,9 @@ export function Settings() {
             <p className="text-sm font-semibold text-red-700">This action cannot be undone.</p>
             <p className="text-sm text-red-600 mt-1">
               All daily reports, crew members, sites, and activity types will be permanently deleted.
-              User accounts are preserved.
+            </p>
+            <p className="text-sm font-bold text-green-700 mt-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              User accounts and login credentials are preserved.
             </p>
           </div>
           <Input
