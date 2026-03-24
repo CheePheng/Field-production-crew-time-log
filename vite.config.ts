@@ -23,14 +23,10 @@ export default defineConfig({
         start_url: '/Field-production-crew-time-log/',
         icons: [
           {
-            src: '/Field-production-crew-time-log/icons/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/Field-production-crew-time-log/icons/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            src: '/Field-production-crew-time-log/icons/icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable',
           },
         ],
       },
