@@ -64,16 +64,55 @@
    ============================================================ */
 .sunlight {
   --glass-opacity: 0.92;
-  font-weight: 600;
-  letter-spacing: 0.02em;
 }
 
-.sunlight .glass {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(255, 255, 255, 0.6);
+.sunlight body,
+.sunlight p,
+.sunlight span,
+.sunlight label,
+.sunlight li {
+  font-weight: 600;
 }
 
 .sunlight * {
   -webkit-font-smoothing: auto;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.01em;
+}
+
+/* Glass cards: more opaque, sharper borders */
+.sunlight .glass {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* Boost contrast on common text */
+.sunlight .text-gray-500 { color: #374151 !important; }
+.sunlight .text-gray-400 { color: #4b5563 !important; }
+.sunlight .text-gray-600 { color: #1f2937 !important; }
+
+/* Buttons: slightly bolder shadow for daylight legibility */
+.sunlight button,
+.sunlight [role="button"] {
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* Inputs: more visible border */
+.sunlight input,
+.sunlight select,
+.sunlight textarea {
+  border-color: #9ca3af !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Cards (solid variant): white, no translucency */
+.sunlight .bg-white {
+  background: #ffffff !important;
+}
+
+/* Reduce blur on backdrop globally */
+.sunlight [style*="backdrop-filter"] {
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }

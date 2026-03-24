@@ -1,4 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Background rounded square -->
   <rect width="192" height="192" rx="32" fill="#0D4F2B"/>
-  <text x="96" y="130" font-size="100" text-anchor="middle" font-family="system-ui, sans-serif" fill="#10B981">🌲</text>
+  <!-- Tree canopy layers (forest green to emerald) -->
+  <!-- Bottom canopy layer -->
+  <polygon points="96,30 30,110 162,110" fill="#10B981"/>
+  <!-- Middle canopy overlap -->
+  <polygon points="96,50 42,118 150,118" fill="#059669"/>
+  <!-- Top canopy layer -->
+  <polygon points="96,65 55,120 137,120" fill="#34d399"/>
+  <!-- Trunk -->
+  <rect x="85" y="118" width="22" height="44" rx="4" fill="#D97706"/>
+  <!-- Ground line accent -->
+  <rect x="52" y="158" width="88" height="6" rx="3" fill="#D97706" opacity="0.7"/>
 </svg>

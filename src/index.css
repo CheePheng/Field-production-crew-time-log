@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────
+   Base styles
+────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   background-color: var(--color-surface);
@@ -12,4 +19,35 @@ body {
 
 #root {
   min-height: 100svh;
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ──────────────────────────────────────────────────────────
+   Page fade-in transition
+────────────────────────────────────────────────────────── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main {
+  animation: page-enter 0.2s ease-out both;
+}
+
+/* ──────────────────────────────────────────────────────────
+   Focus visible ring (non-Tailwind fallback)
+────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #10B981;
+  outline-offset: 2px;
 }

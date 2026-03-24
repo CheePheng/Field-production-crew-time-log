@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { useReport } from '@/hooks/useReport'
 import { useCrewDefaults } from '@/hooks/useCrewDefaults'
 import { useToast } from '@/components/ui/Toast'
+import { useOfflineStatus } from '@/hooks/useOfflineStatus'
 import { getCurrentUser } from '@/utils/auth'
 import { db } from '@/db/schema'
 import { getTodayDate } from '@/utils/dateHelpers'
@@ -121,6 +122,7 @@ export function DailyReport() {
   const { createReport, updateReport, submitReport, getReport } = useReport()
   const { defaults } = useCrewDefaults()
   const { showToast } = useToast()
+  const { isOnline } = useOfflineStatus()
 
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -392,6 +394,7 @@ export function DailyReport() {
             onSubmit={handleSubmit}
             onBack={() => setStep(2)}
             isSubmitting={isSubmitting}
+            isOnline={isOnline}
           />
         )}
       </main>

@@ -192,9 +192,20 @@ export function CrewRoster() {
         {/* Crew list */}
         <div className="flex flex-col gap-3">
           {filtered.length === 0 && (
-            <p className="text-center text-gray-500 text-sm py-8">
-              {search ? 'No crew members match your search.' : 'No crew members yet. Add one below.'}
-            </p>
+            <div className="text-center py-12 px-4">
+              <div className="w-14 h-14 rounded-full bg-forest/10 flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-forest" aria-hidden="true">
+                  <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A12.696 12.696 0 0112 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 01-.372-.568 6.787 6.787 0 011.019-4.38z" clipRule="evenodd" />
+                  <path d="M5.082 14.254a8.287 8.287 0 00-1.308 5.135 9.687 9.687 0 01-1.764-.44l-.115-.04a.563.563 0 01-.373-.487l-.01-.121a3.75 3.75 0 013.57-4.047zM20.226 19.389a8.287 8.287 0 00-1.308-5.135 3.75 3.75 0 013.57 4.047l-.01.121a.563.563 0 01-.373.486l-.115.04c-.567.2-1.156.349-1.764.441z" />
+                </svg>
+              </div>
+              <p className="text-base font-semibold text-gray-700">
+                {search ? 'No crew members match your search' : 'No crew members yet'}
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                {search ? 'Try a different name or IC number' : 'Add your first field worker to get started'}
+              </p>
+            </div>
           )}
           {filtered.map(member => {
             const activity = activities.find(a => a.id === member.default_activity_id)

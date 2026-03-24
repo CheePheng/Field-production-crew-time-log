@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { ToastProvider } from '@/components/ui/Toast'
+import { ToastProvider, useToast } from '@/components/ui/Toast'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { TabBar } from '@/components/layout/TabBar'
 import { useOfflineStatus } from '@/hooks/useOfflineStatus'
@@ -22,19 +22,41 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// ─── Inner layout (needs router context) ─────────────────────────────────────
+// ─── Inner layout (needs router + toast context) ──────────────────────────────
 
 function AppLayout() {
   const location = useLocation()
-  const { isOnline } = useOfflineStatus()
+  const { showToast } = useToast()
   const isLoginPage = location.pathname === '/login'
+
+  const { isOnline } = useOfflineStatus({
+    onOnline: () => showToast('Back online', 'success'),
+    onOffline: () => showToast('You\'re offline — data will be saved locally', 'warning'),
+  })
 
   return (
     <div className="min-h-screen bg-surface">
+      {/* Offline banner — amber bar at the very top */}
+      {!isOnline && !isLoginPage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed top-0 left-0 right-0 z-[60] bg-amber-500 text-white text-xs font-bold text-center py-1.5 px-4 tracking-wide"
+          style={{ paddingTop: 'max(env(safe-area-inset-top, 0px), 6px)' }}
+        >
+          Offline — saving locally
+        </div>
+      )}
+
       {/* Status chip — shown in top-right corner, outside login */}
       {!isLoginPage && (
-        <div className="fixed top-safe top-3 right-3 z-50"
-          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        <div
+          className="fixed right-3 z-50"
+          style={{
+            top: isOnline
+              ? 'calc(env(safe-area-inset-top, 0px) + 12px)'
+              : 'calc(env(safe-area-inset-top, 0px) + 34px)',
+          }}
         >
           <StatusChip isOnline={isOnline} />
         </div>

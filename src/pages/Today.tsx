@@ -301,9 +301,16 @@ export function Today() {
       <main className="p-5 pb-24 max-w-lg mx-auto">
         {/* Greeting */}
         {user && (
-          <p className="text-sm font-semibold text-forest mb-4">
-            Welcome back, {user.display_name}
-          </p>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-full bg-forest flex items-center justify-center shrink-0">
+              <span className="text-white text-sm font-bold" aria-hidden="true">
+                {user.display_name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-forest">
+              Welcome back, {user.display_name}
+            </p>
+          </div>
         )}
 
         {isLoading ? (

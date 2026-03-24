@@ -11,6 +11,7 @@ interface WizardStep3Props {
   onSubmit: () => void
   onBack: () => void
   isSubmitting: boolean
+  isOnline?: boolean
 }
 
 export function WizardStep3({
@@ -21,6 +22,7 @@ export function WizardStep3({
   onSubmit,
   onBack,
   isSubmitting,
+  isOnline = true,
 }: WizardStep3Props) {
   return (
     <div className="flex flex-col gap-5">
@@ -52,6 +54,16 @@ export function WizardStep3({
         />
       </Card>
 
+      {/* Offline notice */}
+      {!isOnline && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          <span className="inline-block w-2 h-2 rounded-full bg-amber-500 shrink-0" aria-hidden="true" />
+          <p className="text-sm font-semibold text-amber-700">
+            Offline — report will be saved locally
+          </p>
+        </div>
+      )}
+
       {/* Submit */}
       <Button
         variant="primary"
@@ -61,7 +73,7 @@ export function WizardStep3({
         loading={isSubmitting}
         disabled={isSubmitting}
       >
-        Submit Report
+        {isOnline ? 'Submit Report' : 'Save Locally'}
       </Button>
 
       {/* Back */}
