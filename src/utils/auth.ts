@@ -2,28 +2,42 @@ import type { FieldLogDB, User } from '@/db/schema';
 
 // ─── Session Types ─────────────────────────────────────────────────────────────
 
-/** User shape stored in sessionStorage — pin_hash is intentionally omitted. */
-export type SessionUser = Omit<User, 'pin_hash'>;
+/** User shape stored in sessionStorage — pin_hash and pin_salt are intentionally omitted. */
+export type SessionUser = Omit<User, 'pin_hash' | 'pin_salt'>;
 
 // ─── PIN Hashing ──────────────────────────────────────────────────────────────
 
 /**
- * Hash a PIN string using SubtleCrypto SHA-256.
- * Returns a hex-encoded digest.
+ * Generate a random 16-byte salt as a hex string.
  */
-export async function hashPin(pin: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(pin);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+export function generateSalt(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
- * Verify a PIN against a stored hash.
+ * Hash a PIN string using PBKDF2 with SHA-256 and 100,000 iterations.
+ * @param pin      The plain-text PIN to hash.
+ * @param saltHex  A hex-encoded 16-byte salt (from generateSalt).
+ * Returns a hex-encoded 256-bit derived key.
  */
-export async function verifyPin(pin: string, hash: string): Promise<boolean> {
-  const computed = await hashPin(pin);
+export async function hashPin(pin: string, saltHex: string): Promise<string> {
+  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map(b => parseInt(b, 16)));
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveBits']
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt, iterations: 100_000 },
+    keyMaterial, 256
+  );
+  return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Verify a PIN against a stored hash using the user's salt.
+ */
+export async function verifyPin(pin: string, hash: string, saltHex: string): Promise<boolean> {
+  const computed = await hashPin(pin, saltHex);
   return computed === hash;
 }
 
@@ -37,7 +51,8 @@ export async function createDefaultAdmin(db: FieldLogDB): Promise<void> {
   if (count > 0) return;
 
   const now = new Date().toISOString();
-  const pinHash = await hashPin('000000');
+  const pinSalt = generateSalt();
+  const pinHash = await hashPin('000000', pinSalt);
 
   const adminUser: User = {
     id: crypto.randomUUID(),
@@ -45,6 +60,7 @@ export async function createDefaultAdmin(db: FieldLogDB): Promise<void> {
     display_name: 'Administrator',
     role: 'admin',
     pin_hash: pinHash,
+    pin_salt: pinSalt,
     created_at: now,
     updated_at: now,
   };
@@ -75,7 +91,7 @@ export function getCurrentUser(): SessionUser | null {
  * pin_hash is stripped before storage so it is never exposed in sessionStorage.
  */
 export function setCurrentUser(user: User): void {
-  const { pin_hash: _, ...sessionUser } = user;
+  const { pin_hash: _hash, pin_salt: _salt, ...sessionUser } = user;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
 }
 

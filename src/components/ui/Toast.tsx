@@ -63,8 +63,6 @@ function ToastItem({ toast }: { toast: ToastItem }) {
 
   return (
     <div
-      role="alert"
-      aria-live="assertive"
       className={[
         'flex items-center gap-3 px-4 py-3',
         'rounded-xl border shadow-lg',
@@ -140,6 +138,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {/* Toast container */}
       <div
+        role="log"
+        aria-live="polite"
         aria-label="Notifications"
         className="fixed bottom-safe bottom-20 left-0 right-0 z-50 flex flex-col items-center gap-2 px-4 pointer-events-none"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)' }}

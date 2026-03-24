@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import Dexie, { type EntityTable, type Transaction } from 'dexie';
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -8,6 +8,7 @@ export interface User {
   display_name: string;
   role: 'admin' | 'supervisor' | 'viewer';
   pin_hash: string;
+  pin_salt: string;
   created_at: string; // ISO8601
   updated_at: string; // ISO8601
 }
@@ -104,6 +105,25 @@ export class FieldLogDB extends Dexie {
       activity_types:  '&id, is_active, sort_order',
       daily_reports:   '&id, date, site_id, status, [date+site_id]',
       photo_blobs:     '&id',
+    });
+
+    // Version 2: add pin_salt column; generate random salts for existing users
+    this.version(2).stores({
+      users:           '&id, &username',
+      sites:           '&id, is_active',
+      crew_members:    '&id, is_active',
+      activity_types:  '&id, is_active, sort_order',
+      daily_reports:   '&id, date, site_id, status, [date+site_id]',
+      photo_blobs:     '&id',
+    }).upgrade(async (tx: Transaction) => {
+      const users = await (tx as unknown as FieldLogDB).users.toArray();
+      for (const user of users) {
+        if (!user.pin_salt) {
+          const bytes = crypto.getRandomValues(new Uint8Array(16));
+          const salt = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+          await (tx as unknown as FieldLogDB).users.update(user.id, { pin_salt: salt });
+        }
+      }
     });
   }
 }

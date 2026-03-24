@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, useId, type ReactNode } from 'react'
 
 interface BottomSheetProps {
   isOpen: boolean
@@ -7,12 +7,25 @@ interface BottomSheetProps {
   children: ReactNode
 }
 
+const FOCUSABLE_SELECTORS = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
 export function BottomSheet({
   isOpen,
   onClose,
   title,
   children,
 }: BottomSheetProps) {
+  const titleId = useId()
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const previouslyFocusedRef = useRef<Element | null>(null)
+
   // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -25,11 +38,64 @@ export function BottomSheet({
     }
   }, [isOpen])
 
-  // Close on Escape key
+  // Focus management: save previous focus, focus first element on open, restore on close
+  useEffect(() => {
+    if (isOpen) {
+      previouslyFocusedRef.current = document.activeElement
+
+      // Focus the first focusable element inside the sheet on next tick
+      const raf = requestAnimationFrame(() => {
+        if (!sheetRef.current) return
+        const focusable = sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS)
+        if (focusable.length > 0) {
+          focusable[0].focus()
+        } else {
+          sheetRef.current.focus()
+        }
+      })
+      return () => cancelAnimationFrame(raf)
+    } else {
+      // Restore focus when closed
+      if (previouslyFocusedRef.current instanceof HTMLElement) {
+        previouslyFocusedRef.current.focus()
+      }
+      previouslyFocusedRef.current = null
+    }
+  }, [isOpen])
+
+  // Close on Escape key and trap Tab/Shift+Tab within the sheet
   useEffect(() => {
     if (!isOpen) return
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key === 'Tab' && sheetRef.current) {
+        const focusable = Array.from(
+          sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS)
+        )
+        if (focusable.length === 0) {
+          e.preventDefault()
+          return
+        }
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+
+        if (e.shiftKey) {
+          // Shift+Tab: if focus is on first element, wrap to last
+          if (document.activeElement === first) {
+            e.preventDefault()
+            last.focus()
+          }
+        } else {
+          // Tab: if focus is on last element, wrap to first
+          if (document.activeElement === last) {
+            e.preventDefault()
+            first.focus()
+          }
+        }
+      }
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
@@ -50,14 +116,18 @@ export function BottomSheet({
 
       {/* Sheet */}
       <div
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={title ? undefined : 'Dialog'}
+        tabIndex={-1}
         className={[
           'fixed bottom-0 left-0 right-0 z-50',
           'bg-white rounded-t-3xl shadow-2xl',
           'max-h-[80vh] flex flex-col',
           'transition-transform duration-300 ease-out',
+          'focus:outline-none',
           isOpen ? 'translate-y-0' : 'translate-y-full',
         ].join(' ')}
         style={{
@@ -72,7 +142,7 @@ export function BottomSheet({
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 shrink-0">
-            <h2 className="text-lg font-bold text-forest">{title}</h2>
+            <h2 id={titleId} className="text-lg font-bold text-forest">{title}</h2>
             <button
               type="button"
               onClick={onClose}

@@ -105,7 +105,7 @@ export function Login() {
         return
       }
 
-      const ok = await verifyPin(pin, user.pin_hash)
+      const ok = await verifyPin(pin, user.pin_hash, user.pin_salt)
       if (!ok) {
         showToast('Incorrect PIN. Please try again.', 'error')
         triggerShake()
@@ -269,7 +269,7 @@ export function Login() {
           <button
             type="button"
             onClick={clearPin}
-            className="text-center text-xs text-gray-400 hover:text-gray-600 transition-colors py-1"
+            className="text-center text-xs text-gray-400 hover:text-gray-600 transition-colors min-h-[48px] px-4 py-3 w-full"
           >
             Clear PIN
           </button>

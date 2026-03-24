@@ -1,5 +1,5 @@
 import type { FieldLogDB, User, Site, CrewMember, ActivityType, DailyReport } from '@/db/schema';
-import { hashPin } from '@/utils/auth';
+import { hashPin, generateSalt } from '@/utils/auth';
 
 /**
  * Populate the database with sample development data.
@@ -13,8 +13,10 @@ export async function seedDatabase(db: FieldLogDB): Promise<void> {
 
   // ── Users ──────────────────────────────────────────────────────────────────
 
-  const adminPinHash = await hashPin('000000');
-  const supervisorPinHash = await hashPin('123456');
+  const adminSalt = generateSalt();
+  const adminPinHash = await hashPin('000000', adminSalt);
+  const supervisorSalt = generateSalt();
+  const supervisorPinHash = await hashPin('123456', supervisorSalt);
 
   const users: User[] = [
     {
@@ -23,6 +25,7 @@ export async function seedDatabase(db: FieldLogDB): Promise<void> {
       display_name: 'Administrator',
       role: 'admin',
       pin_hash: adminPinHash,
+      pin_salt: adminSalt,
       created_at: now,
       updated_at: now,
     },
@@ -32,6 +35,7 @@ export async function seedDatabase(db: FieldLogDB): Promise<void> {
       display_name: 'Ahmad Razif',
       role: 'supervisor',
       pin_hash: supervisorPinHash,
+      pin_salt: supervisorSalt,
       created_at: now,
       updated_at: now,
     },
