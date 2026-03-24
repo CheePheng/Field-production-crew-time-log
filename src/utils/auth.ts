@@ -91,7 +91,8 @@ export function getCurrentUser(): SessionUser | null {
  * pin_hash is stripped before storage so it is never exposed in sessionStorage.
  */
 export function setCurrentUser(user: User): void {
-  const { pin_hash: _hash, pin_salt: _salt, ...sessionUser } = user;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { pin_hash, pin_salt, ...sessionUser } = user;
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
 }
 

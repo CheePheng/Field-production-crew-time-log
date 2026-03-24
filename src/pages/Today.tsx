@@ -249,7 +249,7 @@ export function Today() {
   // Reactive live query for today + week reports
   useEffect(() => {
     firstEmit.current = true
-    setIsLoading(true)
+    setIsLoading(true) // eslint-disable-line react-hooks/set-state-in-effect -- resetting before liveQuery subscription
 
     const sub = liveQuery(async () => {
       const [todayRows, weekRows, recentRows, allSites, activeCrew] = await Promise.all([
@@ -288,7 +288,6 @@ export function Today() {
     })
 
     return () => sub.unsubscribe()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [today, weekStart])
 
   return (

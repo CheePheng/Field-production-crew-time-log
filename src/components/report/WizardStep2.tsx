@@ -33,7 +33,7 @@ function buildEntry(member: CrewMember, activities: ActivityType[]): DailyReport
   }
 }
 
-export function WizardStep2({ entries, siteId: _siteId, onChange, onNext, onBack }: WizardStep2Props) {
+export function WizardStep2({ entries, siteId: _siteId, onChange, onNext, onBack }: WizardStep2Props) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const [allCrew, setAllCrew] = useState<CrewMember[]>([])
   const [activities, setActivities] = useState<ActivityType[]>([])
   const [search, setSearch] = useState('')

@@ -36,7 +36,7 @@ function formatDate(isoDate: string): string {
 }
 
 function sanitizeFilename(str: string): string {
-  return str.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase()
+  return str.replace(/[^a-z0-9_-]/gi, '_').toLowerCase()
 }
 
 // ─── PDF Export ───────────────────────────────────────────────────────────────

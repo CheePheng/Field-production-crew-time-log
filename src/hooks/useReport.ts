@@ -134,7 +134,7 @@ export function useReportsForDate(date: string): LiveQueryResult<DailyReport[]> 
 
   useEffect(() => {
     firstEmit.current = true;
-    setIsLoading(true);
+    setIsLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- resetting before liveQuery subscription
     setError(null);
 
     const subscription = liveQuery(() =>
@@ -172,7 +172,7 @@ export function useReportsByStatus(status: DailyReport['status']): LiveQueryResu
 
   useEffect(() => {
     firstEmit.current = true;
-    setIsLoading(true);
+    setIsLoading(true); // eslint-disable-line react-hooks/set-state-in-effect -- resetting before liveQuery subscription
     setError(null);
 
     const subscription = liveQuery(() =>

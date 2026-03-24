@@ -154,6 +154,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext)
   if (!ctx) {

@@ -32,7 +32,8 @@ export async function exportDatabaseBackup(): Promise<string> {
   ])
 
   // Strip PIN credentials from the export — users must reset PINs after import
-  const users = rawUsers.map(({ pin_hash: _h, pin_salt: _s, ...rest }) => rest)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const users = rawUsers.map(({ pin_hash, pin_salt, ...rest }) => rest)
 
   const backup: BackupData = {
     version: BACKUP_VERSION,

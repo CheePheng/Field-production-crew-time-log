@@ -110,7 +110,7 @@ export function Reports() {
   // Reactive query: fetch reports in date range, filter by status in memory
   useEffect(() => {
     firstEmit.current = true
-    setIsLoading(true)
+    setIsLoading(true) // eslint-disable-line react-hooks/set-state-in-effect -- resetting before liveQuery subscription
 
     const sub = liveQuery(async () => {
       const [reports, allSites] = await Promise.all([
