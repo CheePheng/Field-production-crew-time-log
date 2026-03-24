@@ -17,12 +17,10 @@ export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps)
   // Auto-set OT hours when regular hours exceed threshold
   useEffect(() => {
     if (entry.hours_regular > OT_THRESHOLD && entry.hours_overtime === 0) {
-      onChange({
-        ...entry,
-        hours_overtime: Math.round((entry.hours_regular - OT_THRESHOLD) * 10) / 10,
-      });
+      const calculatedOt = Math.round((entry.hours_regular - OT_THRESHOLD) * 10) / 10;
+      onChange({ ...entry, hours_overtime: calculatedOt });
     }
-  }, [entry.hours_regular])
+  }, [entry.hours_regular, entry.hours_overtime, onChange])
 
   const handleActivityChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {

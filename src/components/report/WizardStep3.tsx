@@ -1,9 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { PhotoCapture } from './PhotoCapture'
+import { PhotoCapture, MAX_PHOTOS } from './PhotoCapture'
 import type { ReportPhoto } from '@/db/schema'
-
-const MAX_PHOTOS = 5
 
 interface WizardStep3Props {
   photos: ReportPhoto[]

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { db } from '@/db/schema';
 import type { DailyReport } from '@/db/schema';
@@ -13,7 +13,7 @@ type UpdateReportData = Partial<Omit<DailyReport, 'id' | 'created_at'>>;
 export function useReport() {
   // ── Create ────────────────────────────────────────────────────────────────
 
-  async function createReport(data: CreateReportData): Promise<string> {
+  const createReport = useCallback(async function createReport(data: CreateReportData): Promise<string> {
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -26,35 +26,35 @@ export function useReport() {
 
     await db.daily_reports.add(report);
     return id;
-  }
+  }, []);
 
   // ── Update ────────────────────────────────────────────────────────────────
 
-  async function updateReport(id: string, data: UpdateReportData): Promise<void> {
+  const updateReport = useCallback(async function updateReport(id: string, data: UpdateReportData): Promise<void> {
     const now = new Date().toISOString();
     await db.daily_reports.update(id, { ...data, updated_at: now });
-  }
+  }, []);
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
-  async function submitReport(id: string): Promise<void> {
+  const submitReport = useCallback(async function submitReport(id: string): Promise<void> {
     const now = new Date().toISOString();
     await db.daily_reports.update(id, {
       status: 'submitted',
       submitted_at: now,
       updated_at: now,
     });
-  }
+  }, []);
 
   // ── Read Single ───────────────────────────────────────────────────────────
 
-  async function getReport(id: string): Promise<DailyReport | undefined> {
+  const getReport = useCallback(async function getReport(id: string): Promise<DailyReport | undefined> {
     return db.daily_reports.get(id);
-  }
+  }, []);
 
   // ── Read by Date Range ────────────────────────────────────────────────────
 
-  async function getReportsByDateRange(
+  const getReportsByDateRange = useCallback(async function getReportsByDateRange(
     startDate: string,
     endDate: string,
   ): Promise<DailyReport[]> {
@@ -62,7 +62,7 @@ export function useReport() {
       .where('date')
       .between(startDate, endDate, true, true)
       .toArray();
-  }
+  }, []);
 
   // ── Yesterday / Most Recent ───────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ export function useReport() {
    * Get the most recent submitted or synced report, optionally filtered by
    * siteId. Used for the "Continue Yesterday" feature.
    */
-  async function getYesterdayReport(siteId?: string): Promise<DailyReport | undefined> {
+  const getYesterdayReport = useCallback(async function getYesterdayReport(siteId?: string): Promise<DailyReport | undefined> {
     if (siteId) {
       // Efficient path: filter by site_id at the index level, then check status
       const results = await db.daily_reports
@@ -86,11 +86,11 @@ export function useReport() {
       .anyOf(['submitted', 'synced'])
       .toArray();
     return all.sort((a, b) => b.date.localeCompare(a.date))[0];
-  }
+  }, []);
 
   // ── Delete ────────────────────────────────────────────────────────────────
 
-  async function deleteReport(id: string): Promise<void> {
+  const deleteReport = useCallback(async function deleteReport(id: string): Promise<void> {
     const report = await db.daily_reports.get(id);
     if (report) {
       // Delete associated photo blobs
@@ -100,7 +100,7 @@ export function useReport() {
       }
     }
     await db.daily_reports.delete(id);
-  }
+  }, []);
 
   return {
     createReport,

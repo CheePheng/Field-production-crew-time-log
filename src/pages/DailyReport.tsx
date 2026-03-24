@@ -182,7 +182,12 @@ export function DailyReport() {
   useEffect(() => { editingReportIdRef.current = editingReportId }, [editingReportId])
   useEffect(() => { isSubmittingRef.current = isSubmitting }, [isSubmitting])
 
-  // Auto-save draft on beforeunload
+  // Auto-save draft on beforeunload (desktop only).
+  // NOTE: On mobile browsers, async IndexedDB writes triggered here will NOT
+  // complete before the page tears down — the Promise is abandoned. The real
+  // protection for unsaved data on mobile is the useEffect unmount cleanup
+  // below, which fires synchronously on SPA navigation before the component
+  // is destroyed. This handler is kept for best-effort desktop support.
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (!editingReportId && formData.siteId && formData.entries.length > 0) {
@@ -225,15 +230,20 @@ export function DailyReport() {
       const now = new Date().toISOString()
 
       if (reportId) {
-        // Update existing draft record
-        db.daily_reports.update(reportId, {
-          date: data.date,
-          site_id: data.siteId,
-          notes: data.notes,
-          entries: data.entries,
-          photos: data.photos,
-          status: 'draft',
-          updated_at: now,
+        // Update existing draft record — but skip if it has already been
+        // submitted or synced to avoid reverting a completed report to draft.
+        db.daily_reports.get(reportId).then(existing => {
+          if (!existing) return
+          if (existing.status === 'submitted' || existing.status === 'synced') return
+          return db.daily_reports.update(reportId, {
+            date: data.date,
+            site_id: data.siteId,
+            notes: data.notes,
+            entries: data.entries,
+            photos: data.photos,
+            status: 'draft',
+            updated_at: now,
+          })
         }).catch(() => {/* ignore */})
       } else if (data.siteId && data.entries.length > 0) {
         // Create a new draft record

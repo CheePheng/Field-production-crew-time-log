@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react'
 import { db } from '@/db/schema'
 import type { ReportPhoto } from '@/db/schema'
 
-const MAX_PHOTOS = 5
+export const MAX_PHOTOS = 5
 const MAX_WIDTH = 1280
 const THUMB_WIDTH = 50
 const GPS_TIMEOUT_MS = 10_000
@@ -26,7 +26,8 @@ async function compressToTarget(canvas: HTMLCanvasElement, targetBytes: number =
   }
 
   // If still too large at minimum quality, accept what we have
-  return blob!
+  if (!blob) throw new Error('Image compression failed');
+  return blob;
 }
 
 async function resizeImage(file: File, maxWidth: number): Promise<Blob> {
@@ -125,12 +126,13 @@ export function PhotoCapture({ photos, onChange }: PhotoCaptureProps) {
       setCameraError('')
 
       try {
-        // Compress image
-        const compressed = await resizeImage(file, MAX_WIDTH)
+        // Run compression and GPS lookup in parallel — GPS has a 10s timeout and
+        // must not block the user waiting for the photo to finish processing.
+        const [compressed, gps] = await Promise.all([
+          resizeImage(file, MAX_WIDTH),
+          getGPS(),
+        ])
         const thumbnail = await makeThumbnailBase64(compressed)
-
-        // Request GPS — non-blocking, 10s timeout
-        const gps = await getGPS()
 
         const blobKey = crypto.randomUUID()
         const now = new Date().toISOString()
