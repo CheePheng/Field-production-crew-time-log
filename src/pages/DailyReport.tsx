@@ -131,6 +131,17 @@ export function DailyReport() {
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
   const pendingSubmitRef = useRef(false)
 
+  // Refs to hold latest values for the unmount cleanup
+  const formDataRef = useRef<ReportFormData>({
+    date: getTodayDate(),
+    siteId: '',
+    entries: [],
+    photos: [],
+    notes: '',
+  })
+  const editingReportIdRef = useRef<string | null>(null)
+  const isSubmittingRef = useRef(false)
+
   const [formData, setFormData] = useState<ReportFormData>({
     date: getTodayDate(),
     siteId: '',
@@ -166,6 +177,11 @@ export function DailyReport() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, defaults])
 
+  // Keep refs in sync with latest state so the unmount cleanup can read them
+  useEffect(() => { formDataRef.current = formData }, [formData])
+  useEffect(() => { editingReportIdRef.current = editingReportId }, [editingReportId])
+  useEffect(() => { isSubmittingRef.current = isSubmitting }, [isSubmitting])
+
   // Auto-save draft on beforeunload
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -193,6 +209,52 @@ export function DailyReport() {
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [editingReportId, formData])
+
+  // Auto-save draft on SPA navigation (component unmount via React Router)
+  useEffect(() => {
+    return () => {
+      const data = formDataRef.current
+      const reportId = editingReportIdRef.current
+      const submitting = isSubmittingRef.current
+
+      // Skip if already submitting (doSubmit handles persistence) or no meaningful data
+      if (submitting) return
+      if (!data.siteId && data.entries.length === 0) return
+
+      const user = getCurrentUser()
+      const now = new Date().toISOString()
+
+      if (reportId) {
+        // Update existing draft record
+        db.daily_reports.update(reportId, {
+          date: data.date,
+          site_id: data.siteId,
+          notes: data.notes,
+          entries: data.entries,
+          photos: data.photos,
+          status: 'draft',
+          updated_at: now,
+        }).catch(() => {/* ignore */})
+      } else if (data.siteId && data.entries.length > 0) {
+        // Create a new draft record
+        const draftId = crypto.randomUUID()
+        db.daily_reports.add({
+          id: draftId,
+          date: data.date,
+          site_id: data.siteId,
+          submitted_by: user?.id ?? 'unknown',
+          status: 'draft',
+          notes: data.notes,
+          created_at: now,
+          updated_at: now,
+          submitted_at: null,
+          synced_at: null,
+          entries: data.entries,
+          photos: data.photos,
+        }).catch(() => {/* ignore */})
+      }
+    }
+  }, []) // empty deps — runs cleanup only on unmount, reads latest values via refs
 
   const handleStep1Change = useCallback((data: { date: string; siteId: string }) => {
     setFormData(prev => ({ ...prev, ...data }))

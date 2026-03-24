@@ -14,13 +14,15 @@ interface CrewEntryRowProps {
 export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps) {
   const otEnabled = entry.hours_overtime > 0 || entry.hours_regular > OT_THRESHOLD
 
-  // Auto-enable OT toggle when regular hours exceed threshold
+  // Auto-set OT hours when regular hours exceed threshold
   useEffect(() => {
     if (entry.hours_regular > OT_THRESHOLD && entry.hours_overtime === 0) {
-      // hours already over threshold but OT hours still 0 — do nothing extra;
-      // the toggle display handles this via otEnabled
+      onChange({
+        ...entry,
+        hours_overtime: Math.round((entry.hours_regular - OT_THRESHOLD) * 10) / 10,
+      });
     }
-  }, [entry.hours_regular, entry.hours_overtime])
+  }, [entry.hours_regular])
 
   const handleActivityChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -57,7 +59,7 @@ export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps)
     [entry, onChange],
   )
 
-  const showOtStepper = otEnabled && entry.hours_overtime > 0
+  const showOtStepper = otEnabled
 
   return (
     <div className="flex flex-col gap-3 py-3 border-b border-gray-100 last:border-0">

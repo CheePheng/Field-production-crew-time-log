@@ -5,15 +5,31 @@ import type { ReportPhoto } from '@/db/schema'
 const MAX_PHOTOS = 5
 const MAX_WIDTH = 1280
 const THUMB_WIDTH = 50
-const JPEG_QUALITY = 0.75
 const GPS_TIMEOUT_MS = 10_000
+const TARGET_BYTES = 200_000
 
 interface PhotoCaptureProps {
   photos: ReportPhoto[]
   onChange: (photos: ReportPhoto[]) => void
 }
 
-async function resizeImage(file: File, maxWidth: number, quality: number): Promise<Blob> {
+async function compressToTarget(canvas: HTMLCanvasElement, targetBytes: number = TARGET_BYTES): Promise<Blob> {
+  let quality = 0.8
+  let blob: Blob | null = null
+
+  while (quality >= 0.3) {
+    blob = await new Promise<Blob | null>(resolve =>
+      canvas.toBlob(resolve, 'image/jpeg', quality)
+    )
+    if (blob && blob.size <= targetBytes) break
+    quality -= 0.1
+  }
+
+  // If still too large at minimum quality, accept what we have
+  return blob!
+}
+
+async function resizeImage(file: File, maxWidth: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image()
     const url = URL.createObjectURL(file)
@@ -27,14 +43,12 @@ async function resizeImage(file: File, maxWidth: number, quality: number): Promi
       canvas.height = h
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0, w, h)
-      canvas.toBlob(
-        blob => {
+      compressToTarget(canvas)
+        .then(blob => {
           if (blob) resolve(blob)
           else reject(new Error('Canvas toBlob returned null'))
-        },
-        'image/jpeg',
-        quality,
-      )
+        })
+        .catch(reject)
     }
     img.onerror = () => {
       URL.revokeObjectURL(url)
@@ -112,7 +126,7 @@ export function PhotoCapture({ photos, onChange }: PhotoCaptureProps) {
 
       try {
         // Compress image
-        const compressed = await resizeImage(file, MAX_WIDTH, JPEG_QUALITY)
+        const compressed = await resizeImage(file, MAX_WIDTH)
         const thumbnail = await makeThumbnailBase64(compressed)
 
         // Request GPS — non-blocking, 10s timeout
