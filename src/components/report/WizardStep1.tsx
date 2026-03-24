@@ -24,7 +24,7 @@ export function WizardStep1({ data, onChange, onNext }: WizardStep1Props) {
   const { defaults } = useCrewDefaults()
 
   useEffect(() => {
-    db.sites.where('is_active').equals(1).toArray().then(setSites).catch(console.error)
+    db.sites.filter(s => s.is_active).toArray().then(setSites).catch(console.error)
   }, [])
 
   function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {

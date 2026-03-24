@@ -1,5 +1,4 @@
-import { useCallback, useEffect } from 'react'
-import { Stepper } from '@/components/ui/Stepper'
+import { useCallback } from 'react'
 import { Toggle } from '@/components/ui/Toggle'
 import type { DailyReportEntry, ActivityType } from '@/db/schema'
 
@@ -13,14 +12,6 @@ interface CrewEntryRowProps {
 
 export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps) {
   const otEnabled = entry.hours_overtime > 0 || entry.hours_regular > OT_THRESHOLD
-
-  // Auto-set OT hours when regular hours exceed threshold
-  useEffect(() => {
-    if (entry.hours_regular > OT_THRESHOLD && entry.hours_overtime === 0) {
-      const calculatedOt = Math.round((entry.hours_regular - OT_THRESHOLD) * 10) / 10;
-      onChange({ ...entry, hours_overtime: calculatedOt });
-    }
-  }, [entry.hours_regular, entry.hours_overtime, onChange])
 
   const handleActivityChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -36,8 +27,13 @@ export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps)
 
   const handleRegularHoursChange = useCallback(
     (val: number) => {
-      // If reducing regular hours below threshold, clear OT hours
-      const newOt = val <= OT_THRESHOLD ? 0 : entry.hours_overtime
+      let newOt = entry.hours_overtime
+      if (val <= OT_THRESHOLD) {
+        newOt = 0
+      } else if (entry.hours_overtime === 0) {
+        // Auto-calculate OT when crossing threshold for the first time
+        newOt = Math.round((val - OT_THRESHOLD) * 10) / 10
+      }
       onChange({ ...entry, hours_regular: val, hours_overtime: newOt })
     },
     [entry, onChange],
@@ -56,8 +52,6 @@ export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps)
     },
     [entry, onChange],
   )
-
-  const showOtStepper = otEnabled
 
   return (
     <div className="flex flex-col gap-3 py-3 border-b border-gray-100 last:border-0">
@@ -168,9 +162,6 @@ export function CrewEntryRow({ entry, activities, onChange }: CrewEntryRowProps)
         </div>
       )}
 
-      {/* Suppress unused import warning — Stepper is used in WizardStep3 */}
-      {false && <Stepper value={0} onChange={() => {}} />}
-      {false && showOtStepper && null}
     </div>
   )
 }

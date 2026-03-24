@@ -69,7 +69,7 @@ export function CrewRoster() {
   // Load activity types for dropdown
   useEffect(() => {
     const sub = liveQuery(() =>
-      db.activity_types.where('is_active').equals(1).sortBy('sort_order')
+      db.activity_types.filter(a => a.is_active).sortBy('sort_order')
     ).subscribe({
       next: setActivities,
       error: () => {},

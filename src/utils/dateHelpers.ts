@@ -1,15 +1,20 @@
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-/** Returns today's date as an ISO-8601 string (YYYY-MM-DD). */
-export function getTodayDate(): string {
-  return new Date().toISOString().slice(0, 10)
+/** Formats a Date as YYYY-MM-DD using local timezone. */
+function toLocalDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-/** Returns the date N calendar days ago as an ISO-8601 string (YYYY-MM-DD). */
+/** Returns today's date as a local YYYY-MM-DD string. */
+export function getTodayDate(): string {
+  return toLocalDateString(new Date())
+}
+
+/** Returns the date N calendar days ago as a local YYYY-MM-DD string. */
 export function getDateDaysAgo(days: number): string {
   const d = new Date()
   d.setDate(d.getDate() - days)
-  return d.toISOString().slice(0, 10)
+  return toLocalDateString(d)
 }
 
 /** Returns the first day of the current month as an ISO-8601 string (YYYY-MM-DD). */

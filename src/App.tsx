@@ -14,11 +14,18 @@ import { Sites } from '@/pages/admin/Sites'
 import { ActivityTypes } from '@/pages/admin/ActivityTypes'
 import { getCurrentUser } from '@/utils/auth'
 
-// ─── Admin route guard ────────────────────────────────────────────────────────
+// ─── Route guards ─────────────────────────────────────────────────────────────
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const user = getCurrentUser()
+  if (!user) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
 
 function RequireAdmin({ children }: { children: React.ReactNode }) {
   const user = getCurrentUser()
-  if (!user || user.role !== 'admin') return <Navigate to="/" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (user.role !== 'admin') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -64,12 +71,12 @@ function AppLayout() {
 
       {/* Page content */}
       <Routes>
-        <Route path="/" element={<Today />} />
-        <Route path="/report/new" element={<DailyReport />} />
-        <Route path="/report/:id" element={<DailyReport />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/export" element={<Export />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/" element={<RequireAuth><Today /></RequireAuth>} />
+        <Route path="/report/new" element={<RequireAuth><DailyReport /></RequireAuth>} />
+        <Route path="/report/:id" element={<RequireAuth><DailyReport /></RequireAuth>} />
+        <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
+        <Route path="/export" element={<RequireAuth><Export /></RequireAuth>} />
+        <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
         <Route path="/admin/crew" element={<RequireAdmin><CrewRoster /></RequireAdmin>} />
         <Route path="/admin/sites" element={<RequireAdmin><Sites /></RequireAdmin>} />
         <Route path="/admin/activities" element={<RequireAdmin><ActivityTypes /></RequireAdmin>} />

@@ -263,7 +263,7 @@ export function Today() {
           .limit(3)
           .toArray(),
         db.sites.toArray(),
-        db.crew_members.where('is_active').equals(1).count(),
+        db.crew_members.filter(m => m.is_active).count(),
       ])
 
       const siteMap = new Map<string, Site>(allSites.map(s => [s.id, s]))

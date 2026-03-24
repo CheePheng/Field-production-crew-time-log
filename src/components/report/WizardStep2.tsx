@@ -42,8 +42,8 @@ export function WizardStep2({ entries, siteId: _siteId, onChange, onNext, onBack
 
   useEffect(() => {
     Promise.all([
-      db.crew_members.where('is_active').equals(1).toArray(),
-      db.activity_types.where('is_active').equals(1).sortBy('sort_order'),
+      db.crew_members.filter(m => m.is_active).toArray(),
+      db.activity_types.filter(a => a.is_active).sortBy('sort_order'),
     ]).then(([crew, acts]) => {
       setAllCrew(crew)
       setActivities(acts)

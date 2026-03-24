@@ -6,6 +6,11 @@ import App from './App.tsx'
 import { db } from '@/db/schema'
 import { createDefaultAdmin } from '@/utils/auth'
 
+// Restore sunlight mode from localStorage before first paint
+if (localStorage.getItem('fieldlog_sunlight') === 'true') {
+  document.documentElement.classList.add('sunlight')
+}
+
 // Request persistent storage so IndexedDB data isn't evicted by the browser
 if (navigator.storage && navigator.storage.persist) {
   navigator.storage.persist().then(persisted => {

@@ -1,4 +1,5 @@
 import { db } from '@/db/schema'
+import { generateSalt, hashPin } from '@/utils/auth'
 import type { User, Site, CrewMember, ActivityType, DailyReport } from '@/db/schema'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -110,9 +111,18 @@ export async function importDatabaseBackup(jsonString: string): Promise<void> {
       db.daily_reports.clear(),
     ])
 
+    // Restore users with a default PIN (000000) since hashes are stripped from backups
+    const DEFAULT_PIN = '000000'
+    const usersWithPins: User[] = await Promise.all(
+      parsed.users.map(async (u) => {
+        const salt = generateSalt()
+        const hash = await hashPin(DEFAULT_PIN, salt)
+        return { ...u, pin_hash: hash, pin_salt: salt } as User
+      })
+    )
+
     await Promise.all([
-      // pin_hash/pin_salt are absent in backups — users must reset PINs after import
-      db.users.bulkAdd(parsed.users as unknown as User[]),
+      db.users.bulkAdd(usersWithPins),
       db.sites.bulkAdd(parsed.sites),
       db.crew_members.bulkAdd(parsed.crew_members),
       db.activity_types.bulkAdd(parsed.activity_types),
