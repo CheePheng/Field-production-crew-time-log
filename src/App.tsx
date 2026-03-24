@@ -9,6 +9,9 @@ import { Reports } from '@/pages/Reports'
 import { Export } from '@/pages/Export'
 import { Settings } from '@/pages/Settings'
 import { Login } from '@/pages/Login'
+import { CrewRoster } from '@/pages/admin/CrewRoster'
+import { Sites } from '@/pages/admin/Sites'
+import { ActivityTypes } from '@/pages/admin/ActivityTypes'
 
 // ─── Inner layout (needs router context) ─────────────────────────────────────
 
@@ -36,6 +39,9 @@ function AppLayout() {
         <Route path="/reports" element={<Reports />} />
         <Route path="/export" element={<Export />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/admin/crew" element={<CrewRoster />} />
+        <Route path="/admin/sites" element={<Sites />} />
+        <Route path="/admin/activities" element={<ActivityTypes />} />
         <Route path="/login" element={<Login />} />
       </Routes>
 
