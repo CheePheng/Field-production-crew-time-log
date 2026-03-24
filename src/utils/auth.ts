@@ -1,5 +1,10 @@
 import type { FieldLogDB, User } from '@/db/schema';
 
+// ─── Session Types ─────────────────────────────────────────────────────────────
+
+/** User shape stored in sessionStorage — pin_hash is intentionally omitted. */
+export type SessionUser = Omit<User, 'pin_hash'>;
+
 // ─── PIN Hashing ──────────────────────────────────────────────────────────────
 
 /**
@@ -53,12 +58,13 @@ const SESSION_KEY = 'fieldlog_current_user';
 
 /**
  * Get the currently authenticated user from sessionStorage.
+ * Returns a SessionUser (without pin_hash) or null if not logged in.
  */
-export function getCurrentUser(): User | null {
+export function getCurrentUser(): SessionUser | null {
   const raw = sessionStorage.getItem(SESSION_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as User;
+    return JSON.parse(raw) as SessionUser;
   } catch {
     return null;
   }
@@ -66,9 +72,11 @@ export function getCurrentUser(): User | null {
 
 /**
  * Store the current user in sessionStorage.
+ * pin_hash is stripped before storage so it is never exposed in sessionStorage.
  */
 export function setCurrentUser(user: User): void {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  const { pin_hash: _, ...sessionUser } = user;
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
 }
 
 /**

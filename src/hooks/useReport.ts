@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { db } from '@/db/schema';
 import type { DailyReport } from '@/db/schema';
@@ -67,21 +67,24 @@ export function useReport() {
   // ── Yesterday / Most Recent ───────────────────────────────────────────────
 
   /**
-   * Get the most recent submitted report, optionally filtered by siteId.
-   * Used for the "Continue Yesterday" feature.
+   * Get the most recent submitted or synced report, optionally filtered by
+   * siteId. Used for the "Continue Yesterday" feature.
    */
   async function getYesterdayReport(siteId?: string): Promise<DailyReport | undefined> {
-    let collection = db.daily_reports
-      .where('status')
-      .equals('submitted');
-
     if (siteId) {
-      const all = await collection.toArray();
-      const filtered = all.filter(r => r.site_id === siteId);
-      return filtered.sort((a, b) => b.date.localeCompare(a.date))[0];
+      // Efficient path: filter by site_id at the index level, then check status
+      const results = await db.daily_reports
+        .where('site_id')
+        .equals(siteId)
+        .filter(r => r.status === 'submitted' || r.status === 'synced')
+        .toArray();
+      return results.sort((a, b) => b.date.localeCompare(a.date))[0];
     }
 
-    const all = await collection.toArray();
+    const all = await db.daily_reports
+      .where('status')
+      .anyOf(['submitted', 'synced'])
+      .toArray();
     return all.sort((a, b) => b.date.localeCompare(a.date))[0];
   }
 
@@ -110,44 +113,87 @@ export function useReport() {
   };
 }
 
-// ─── Live Query Hook ──────────────────────────────────────────────────────────
+// ─── Live Query Hooks ─────────────────────────────────────────────────────────
+
+export interface LiveQueryResult<T> {
+  data: T;
+  isLoading: boolean;
+  error: unknown;
+}
 
 /**
  * Reactive hook that returns all reports for a given date, updating live.
+ * Returns { data, isLoading, error } so callers can handle loading / error states.
  */
-export function useReportsForDate(date: string): DailyReport[] {
-  const [reports, setReports] = useState<DailyReport[]>([]);
+export function useReportsForDate(date: string): LiveQueryResult<DailyReport[]> {
+  const [data, setData] = useState<DailyReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  // Track whether the first emission has arrived so isLoading flips only once
+  const firstEmit = useRef(true);
 
   useEffect(() => {
+    firstEmit.current = true;
+    setIsLoading(true);
+    setError(null);
+
     const subscription = liveQuery(() =>
       db.daily_reports.where('date').equals(date).toArray()
     ).subscribe({
-      next: setReports,
-      error: (err: unknown) => console.error('useReportsForDate error:', err),
+      next: (rows) => {
+        setData(rows);
+        if (firstEmit.current) {
+          setIsLoading(false);
+          firstEmit.current = false;
+        }
+      },
+      error: (err: unknown) => {
+        console.error('useReportsForDate error:', err);
+        setError(err);
+        setIsLoading(false);
+      },
     });
 
     return () => subscription.unsubscribe();
   }, [date]);
 
-  return reports;
+  return { data, isLoading, error };
 }
 
 /**
  * Reactive hook that returns all reports with a given status, updating live.
+ * Returns { data, isLoading, error } so callers can handle loading / error states.
  */
-export function useReportsByStatus(status: DailyReport['status']): DailyReport[] {
-  const [reports, setReports] = useState<DailyReport[]>([]);
+export function useReportsByStatus(status: DailyReport['status']): LiveQueryResult<DailyReport[]> {
+  const [data, setData] = useState<DailyReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
+  const firstEmit = useRef(true);
 
   useEffect(() => {
+    firstEmit.current = true;
+    setIsLoading(true);
+    setError(null);
+
     const subscription = liveQuery(() =>
       db.daily_reports.where('status').equals(status).toArray()
     ).subscribe({
-      next: setReports,
-      error: (err: unknown) => console.error('useReportsByStatus error:', err),
+      next: (rows) => {
+        setData(rows);
+        if (firstEmit.current) {
+          setIsLoading(false);
+          firstEmit.current = false;
+        }
+      },
+      error: (err: unknown) => {
+        console.error('useReportsByStatus error:', err);
+        setError(err);
+        setIsLoading(false);
+      },
     });
 
     return () => subscription.unsubscribe();
   }, [status]);
 
-  return reports;
+  return { data, isLoading, error };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { db } from '@/db/schema';
 import type { DailyReport, DailyReportEntry } from '@/db/schema';
 
@@ -38,7 +38,7 @@ export function useCrewDefaults(): UseCrewDefaultsResult {
       try {
         const submitted = await db.daily_reports
           .where('status')
-          .equals('submitted')
+          .anyOf(['submitted', 'synced'])
           .toArray();
 
         if (submitted.length === 0) {
@@ -70,14 +70,14 @@ export function useCrewDefaults(): UseCrewDefaultsResult {
 
   /**
    * Create a new draft report pre-filled with crew / activity data from the
-   * most recent submitted report.
+   * most recent submitted or synced report.
    *
    * @returns the new report id, or null if there are no defaults to apply.
    */
-  async function applyDefaults(
+  const applyDefaults = useCallback(async (
     targetDate: string,
     submittedBy: string,
-  ): Promise<string | null> {
+  ): Promise<string | null> => {
     if (!defaults) return null;
 
     const now = new Date().toISOString();
@@ -108,7 +108,7 @@ export function useCrewDefaults(): UseCrewDefaultsResult {
     });
 
     return id;
-  }
+  }, [defaults]);
 
   return { defaults, isLoading, applyDefaults };
 }
