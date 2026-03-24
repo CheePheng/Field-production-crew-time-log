@@ -306,9 +306,15 @@ export function Export() {
             </Button>
           </div>
           {numReports === 0 && !isLoading && (
-            <p className="text-xs text-gray-400 text-center mt-3">
-              No reports found in the selected range.
-            </p>
+            <div className="flex flex-col items-center py-6 text-gray-400">
+              <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12H9.75m0 0 2.25 2.25M9.75 15l2.25-2.25M13.5 2.25H6.375c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h11.25c.621 0 1.125-.504 1.125-1.125V7.5L13.5 2.25Z" />
+                </svg>
+              </div>
+              <p className="font-medium text-gray-500">No reports found</p>
+              <p className="text-xs mt-1">Try adjusting the date range</p>
+            </div>
           )}
           {numReports > 0 && submittedCount === 0 && !isLoading && (
             <p className="text-xs text-amber-600 text-center mt-2">
