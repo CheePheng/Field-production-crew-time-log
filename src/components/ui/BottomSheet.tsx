@@ -77,7 +77,7 @@ export function BottomSheet({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="w-12 h-12 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
