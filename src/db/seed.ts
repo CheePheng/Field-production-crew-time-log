@@ -32,7 +32,7 @@ export async function seedDatabase(db: FieldLogDB): Promise<void> {
     {
       id: crypto.randomUUID(),
       username: 'supervisor1',
-      display_name: 'Ahmad Razif',
+      display_name: 'Testing',
       role: 'supervisor',
       pin_hash: supervisorPinHash,
       pin_salt: supervisorSalt,
